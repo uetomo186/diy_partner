@@ -1,20 +1,19 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import '../../providers/light_providers.dart';
 
-class ScreenMode extends StatefulWidget {
+class ScreenMode extends ConsumerStatefulWidget {
   const ScreenMode({super.key});
 
   @override
-  State<ScreenMode> createState() => _ScreenModeState();
+  ConsumerState<ScreenMode> createState() => _ScreenModeState();
 }
 
-class _ScreenModeState extends State<ScreenMode> {
-  Color _screenColor = const Color(0xFFF5F5F5); // Default to Natural
-  double _brightness = 0.5;
-
+class _ScreenModeState extends ConsumerState<ScreenMode> {
   // Fluorescent Presets
   final Color _warmColor = const Color(0xFFFFA726);
   final Color _naturalColor = const Color(0xFFF5F5F5);
@@ -23,46 +22,31 @@ class _ScreenModeState extends State<ScreenMode> {
   @override
   void initState() {
     super.initState();
-    WakelockPlus.enable();
-    _initBrightness();
-  }
-
-  Future<void> _initBrightness() async {
-    try {
-      final brightness = await ScreenBrightness().current;
-      setState(() {
-        _brightness = brightness;
-      });
-    } catch (e) {
-      debugPrint(e.toString());
-    }
+    WakelockPlus.enable().catchError((e) {
+       debugPrint('Wakelock enable error: $e');
+    });
+    // Brightness init is handled by provider, but we set wakelock here
   }
 
   @override
   void dispose() {
-    WakelockPlus.disable();
+    WakelockPlus.disable().catchError((e) {
+       debugPrint('Wakelock disable error: $e');
+    });
     ScreenBrightness().resetScreenBrightness();
     super.dispose();
   }
 
-  Future<void> _setBrightness(double value) async {
-    try {
-      await ScreenBrightness().setScreenBrightness(value);
-      setState(() {
-        _brightness = value;
-      });
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(screenSettingsProvider);
+    final notifier = ref.read(screenSettingsProvider.notifier);
+
     return Stack(
       children: [
         // Background Color Layer (The Light)
         Container(
-          color: _screenColor,
+          color: settings.color,
           width: double.infinity,
           height: double.infinity,
         ),
@@ -102,9 +86,9 @@ class _ScreenModeState extends State<ScreenMode> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildPresetBtn('Warm', _warmColor),
-                          _buildPresetBtn('Natural', _naturalColor),
-                          _buildPresetBtn('Cool', _coolColor),
+                          _buildPresetBtn('Warm', _warmColor, settings.color, notifier),
+                          _buildPresetBtn('Natural', _naturalColor, settings.color, notifier),
+                          _buildPresetBtn('Cool', _coolColor, settings.color, notifier),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -124,8 +108,8 @@ class _ScreenModeState extends State<ScreenMode> {
                                 thumbColor: Colors.white,
                               ),
                               child: Slider(
-                                value: _brightness,
-                                onChanged: _setBrightness,
+                                value: settings.brightness,
+                                onChanged: notifier.setBrightness,
                               ),
                             ),
                           ),
@@ -143,8 +127,8 @@ class _ScreenModeState extends State<ScreenMode> {
                                 title: const Text('Pick a color'),
                                 content: SingleChildScrollView(
                                   child: ColorPicker(
-                                    pickerColor: _screenColor,
-                                    onColorChanged: _setColor,
+                                    pickerColor: settings.color,
+                                    onColorChanged: notifier.setColor,
                                     displayThumbColor: true,
                                     enableAlpha: false,
                                     paletteType: PaletteType.hsvWithHue,
@@ -172,14 +156,13 @@ class _ScreenModeState extends State<ScreenMode> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
-  Widget _buildPresetBtn(String label, Color color) {
-    bool isSelected = _screenColor == color;
+  Widget _buildPresetBtn(String label, Color color, Color currentColor, ScreenSettingsNotifier notifier) {
+    bool isSelected = currentColor == color;
     return GestureDetector(
-      onTap: () => _setColor(color),
+      onTap: () => notifier.setColor(color),
       child: Column(
         children: [
           Container(

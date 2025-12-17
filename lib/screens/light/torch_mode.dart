@@ -1,66 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../widgets/glow_button.dart';
-import 'package:torch_light/torch_light.dart';
-import 'package:vibration/vibration.dart';
+import '../../providers/light_providers.dart';
 
-class TorchMode extends StatefulWidget {
+class TorchMode extends ConsumerStatefulWidget {
   const TorchMode({super.key});
 
   @override
-  State<TorchMode> createState() => _TorchModeState();
+  ConsumerState<TorchMode> createState() => _TorchModeState();
 }
 
-class _TorchModeState extends State<TorchMode> {
-  bool _isTorchOn = false;
+class _TorchModeState extends ConsumerState<TorchMode> {
 
-  Future<void> _toggleTorch() async {
-    try {
-      if (await Vibration.hasVibrator() ?? false) {
-        Vibration.vibrate(duration: 50); // Haptic feedback
-      }
-
-      if (_isTorchOn) {
-        await TorchLight.disableTorch();
-      } else {
-        await TorchLight.enableTorch();
-      }
-      setState(() {
-        _isTorchOn = !_isTorchOn;
-      });
-    } catch (e) {
-      // Handle error (e.g., no torch available)
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ライトを制御できませんでした')),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    // Ensure torch is off when leaving
-    TorchLight.disableTorch();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
+    final isTorchOn = ref.watch(torchProvider);
+    final notifier = ref.read(torchProvider.notifier);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           GlowButton(
-            onTap: _toggleTorch,
-            isActive: _isTorchOn,
+            onTap: notifier.toggle,
+            isActive: isTorchOn,
           ),
           const SizedBox(height: 40),
           Text(
-            _isTorchOn ? 'ON' : 'OFF',
+            isTorchOn ? 'ON' : 'OFF',
             style: TextStyle(
-              color: _isTorchOn ? Colors.cyanAccent : Colors.grey,
+              color: isTorchOn ? Colors.cyanAccent : Colors.grey,
               fontSize: 24,
               fontWeight: FontWeight.bold,
               letterSpacing: 2,
-              shadows: _isTorchOn
+              shadows: isTorchOn
                   ? [
                       const Shadow(
                         blurRadius: 10.0,

@@ -1,80 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../models/diary.dart';
-import '../utils/database_helper.dart';
+import '../providers/diary_providers.dart';
 
-class DiaryScreen extends StatefulWidget {
+class DiaryScreen extends ConsumerWidget {
   const DiaryScreen({super.key});
 
   @override
-  State<DiaryScreen> createState() => _DiaryScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final diaryListAsync = ref.watch(diaryListProvider);
 
-class _DiaryScreenState extends State<DiaryScreen> {
-  late Future<List<Diary>> _diaryListFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _refreshDiaryList();
-  }
-
-  void _refreshDiaryList() {
-    setState(() {
-      _diaryListFuture = DatabaseHelper.instance.readAllDiaries();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('日記')),
-      body: FutureBuilder<List<Diary>>(
-        future: _diaryListFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+      appBar: AppBar(title: const Text('DIY日記')),
+      body: diaryListAsync.when(
+        data: (diaryList) {
+          if (diaryList.isEmpty) {
             return const Center(child: Text('日記はまだありません'));
           }
-
-          final diaries = snapshot.data!;
           return ListView.builder(
-            itemCount: diaries.length,
+            itemCount: diaryList.length,
             itemBuilder: (context, index) {
-              final diary = diaries[index];
+              final diary = diaryList[index];
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
-                  title: Text(
-                    diary.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  title: Text(diary.title),
                   subtitle: Text(
-                    DateFormat('yyyy/MM/dd HH:mm').format(diary.createdAt),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () async {
-                    final result = await context.push('/diary/edit', extra: diary);
-                    if (result == true) {
-                      _refreshDiaryList();
-                    }
+                      DateFormat('yyyy/MM/dd HH:mm').format(diary.createdAt)),
+                  onTap: () {
+                    context.push('/diary/edit', extra: diary);
                   },
                 ),
               );
             },
           );
         },
+        error: (err, stack) => Center(child: Text('エラーが発生しました: $err')),
+        loading: () => const Center(child: CircularProgressIndicator()),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await context.push('/diary/edit');
-          if (result == true) {
-            _refreshDiaryList();
-          }
+        onPressed: () {
+          context.push('/diary/edit');
         },
         child: const Icon(Icons.add),
       ),

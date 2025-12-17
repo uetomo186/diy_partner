@@ -46,6 +46,7 @@ dependencies:
   sensors_plus: ^3.0.3
   package_info_plus: ^4.0.2
   shared_preferences: ^2.2.0
+  flutter_riverpod: ^2.4.9
 
 dev_dependencies:
   flutter_test:
