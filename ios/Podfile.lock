@@ -1,0 +1,72 @@
+PODS:
+  - device_info_plus (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+  - package_info_plus (0.4.5):
+    - Flutter
+  - screen_brightness_ios (0.1.0):
+    - Flutter
+  - sensors_plus (0.0.1):
+    - Flutter
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - sqflite_darwin (0.0.4):
+    - Flutter
+    - FlutterMacOS
+  - torch_light (0.0.1):
+    - Flutter
+  - vibration (1.7.5):
+    - Flutter
+  - wakelock_plus (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
+  - Flutter (from `Flutter`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
+  - screen_brightness_ios (from `.symlinks/plugins/screen_brightness_ios/ios`)
+  - sensors_plus (from `.symlinks/plugins/sensors_plus/ios`)
+  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
+  - torch_light (from `.symlinks/plugins/torch_light/ios`)
+  - vibration (from `.symlinks/plugins/vibration/ios`)
+  - wakelock_plus (from `.symlinks/plugins/wakelock_plus/ios`)
+
+EXTERNAL SOURCES:
+  device_info_plus:
+    :path: ".symlinks/plugins/device_info_plus/ios"
+  Flutter:
+    :path: Flutter
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
+  screen_brightness_ios:
+    :path: ".symlinks/plugins/screen_brightness_ios/ios"
+  sensors_plus:
+    :path: ".symlinks/plugins/sensors_plus/ios"
+  shared_preferences_foundation:
+    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  sqflite_darwin:
+    :path: ".symlinks/plugins/sqflite_darwin/darwin"
+  torch_light:
+    :path: ".symlinks/plugins/torch_light/ios"
+  vibration:
+    :path: ".symlinks/plugins/vibration/ios"
+  wakelock_plus:
+    :path: ".symlinks/plugins/wakelock_plus/ios"
+
+SPEC CHECKSUMS:
+  device_info_plus: bf2e3232933866d73fe290f2942f2156cdd10342
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  package_info_plus: 115f4ad11e0698c8c1c5d8a689390df880f47e85
+  screen_brightness_ios: 715ca807df953bf676d339f11464e438143ee625
+  sensors_plus: 4ee32bc7d61a055f27f88d3215ad6b6fb96a2b8e
+  shared_preferences_foundation: 5086985c1d43c5ba4d5e69a4e8083a389e2909e6
+  sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d
+  torch_light: 682062fa12102172fa38b6b14c106d93b060f83e
+  vibration: 7d883d141656a1c1a6d8d238616b2042a51a1241
+  wakelock_plus: 78ec7c5b202cab7761af8e2b2b3d0671be6c4ae1
+
+PODFILE CHECKSUM: f79e1872da79a29354b04cf03619f8f3d69fe58e
+
+COCOAPODS: 1.15.2
