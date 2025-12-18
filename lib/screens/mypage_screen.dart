@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/diary_providers.dart';
+import '../providers/user_provider.dart';
 
 class MyPageScreen extends ConsumerStatefulWidget {
   const MyPageScreen({super.key});
@@ -27,76 +29,76 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     });
   }
 
-  Future<void> _deleteAllDiaries() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('全データ削除'),
-        content: const Text('本当に全ての日記データを削除しますか？\nこの操作は取り消せません。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('削除', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      // Use the notifier to clear data.
-      // Since we don't have a "bulk delete" in the notifier yet, we can
-      // iterate or add a method. For minimal changes, we can use the DB directly
-      // but triggering a refresh is better. Let's stick to DB direct for "Danger Zone"
-      // but ensure provider is invalidated or refreshed if needed.
-      // Ideally notifier should have a clearAll method.
-      // For now, let's keep the existing logic but maybe invalidate the provider?
-      // Actually, let's just invalidate the provider after deletion.
-      
-      // Accessing DB directly here for simplicity as notifier methods are single-item specific currently.
-      // A better refactor would add `deleteAll` to `DiaryListNotifier`.
-      final notifier = ref.read(diaryListProvider.notifier);
-      // However, we don't have access to DB directly here unless we import it,
-      // and we want to avoid mixing patterns. The clean way is to rely on provider side effects.
-      // Since we didn't add deleteAll to provider, let's import helper just for this
-      // or simply rely on the fact that we can create a quick provider method if we want.
-      // Let's use the DB helper directly for now as this is a "System" action.
-      // AND invalidate the list.
-      
-      // Wait, we can't import DatabaseHelper here if we want to be clean.
-      // But we can just use the provider to refresh.
-      // Let's assume we won't add a new method to provider to save tokens,
-      // and just use the helper which is already imported in the original code?
-      // Oh, I see I should keep the import if I use it.
-      
-      // BUT, to be "Riverpod-y", I should really move this logic to the provider.
-      // Let's simpler: just use what we had, but invalidate the provider.
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final userStateAsync = ref.watch(userProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('マイページ')),
       body: ListView(
         children: [
           const SizedBox(height: 20),
           // User Profile Placeholder
-          const Center(
+          Center(
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.grey,
-                  child: Icon(Icons.person, size: 50, color: Colors.white),
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    userStateAsync.when(
+                      data: (user) {
+                        return GestureDetector(
+                          onTap: () {
+                            if (user.profileImagePath != null) {
+                              context.push('/mypage/preview', extra: user.profileImagePath);
+                            }
+                          },
+                          child: Hero(
+                            tag: 'profile_image',
+                            child: CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.grey,
+                              backgroundImage: user.profileImagePath != null
+                                  ? FileImage(File(user.profileImagePath!))
+                                  : null,
+                              child: user.profileImagePath == null
+                                  ? const Icon(Icons.person, size: 50, color: Colors.white)
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
+                      loading: () => const CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.grey,
+                        child: CircularProgressIndicator(color: Colors.white),
+                      ),
+                      error: (_, __) => const CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.grey,
+                        child: Icon(Icons.error, color: Colors.white),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const CircleAvatar(
+                        radius: 15,
+                        backgroundColor: Colors.white,
+                        child: Icon(Icons.edit, size: 20, color: Colors.black),
+                      ),
+                      onPressed: () {
+                        ref.read(userProvider.notifier).pickImage();
+                      },
+                    ),
+                  ],
                 ),
-                SizedBox(height: 10),
-                Text(
-                  'User Name',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                const SizedBox(height: 10),
+                userStateAsync.when(
+                  data: (user) => Text(
+                    user.userName,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  loading: () => const Text('Loading...'),
+                  error: (_, __) => const Text('Error'),
                 ),
               ],
             ),
