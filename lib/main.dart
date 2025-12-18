@@ -3,13 +3,12 @@ import 'router/app_router.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  await initializeDateFormatting('ja');
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -27,4 +26,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
