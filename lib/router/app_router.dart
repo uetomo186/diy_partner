@@ -8,6 +8,7 @@ import '../widgets/scaffold_with_nav_bar.dart';
 
 import '../models/diary.dart';
 import '../screens/diary_edit_screen.dart';
+import '../screens/profile_image_preview_screen.dart';
 
 // Private navigators
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -26,6 +27,14 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final diary = state.extra as Diary?;
         return DiaryEditScreen(diary: diary);
+      },
+    ),
+    GoRoute(
+      path: '/mypage/preview',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) {
+        final imagePath = state.extra as String;
+        return ProfileImagePreviewScreen(imagePath: imagePath);
       },
     ),
     // StatefulShellRoute maintains the state of each branch

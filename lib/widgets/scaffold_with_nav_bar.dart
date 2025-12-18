@@ -21,19 +21,19 @@ class ScaffoldWithNavBar extends StatelessWidget {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.book),
-            label: 'Diary',
+            label: '日記',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.lightbulb_outline),
-            label: 'Light',
+            label: 'ライト',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
-            label: 'Level',
+            label: '水平器',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'MyPage',
+            label: 'マイページ',
           ),
         ],
       ),

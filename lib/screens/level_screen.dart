@@ -151,8 +151,8 @@ class _LevelScreenState extends ConsumerState<LevelScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildValueDisplay("X", xAngle),
-              _buildValueDisplay("Y", yAngle),
+              _buildValueDisplay("左右", xAngle),
+              _buildValueDisplay("前後", yAngle),
             ],
           ),
         ],
