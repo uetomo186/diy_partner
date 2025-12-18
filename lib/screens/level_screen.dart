@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'package:vibration/vibration.dart';
+import 'package:flutter/services.dart';
 import '../providers/level_providers.dart';
 
 class LevelScreen extends ConsumerStatefulWidget {
@@ -37,12 +37,10 @@ class _LevelScreenState extends ConsumerState<LevelScreen> {
     bool isLevel = (_x.abs() < 0.2 && _y.abs() < 0.2);
 
     if (isLevel && !_isBalanced) {
-      if (await Vibration.hasVibrator() ?? false) {
-        Vibration.vibrate(duration: 50);
-      }
+      HapticFeedback.mediumImpact();
     }
     if (mounted) {
-       setState(() {
+      setState(() {
         _isBalanced = isLevel;
       });
     }
@@ -80,7 +78,8 @@ class _LevelScreenState extends ConsumerState<LevelScreen> {
 
     // Visual constraints
     double bubbleX = -_x * 20; // Scale factor
-    double bubbleY = _y * 20;  // Y axis is inverted on screen relative to sensor usually
+    double bubbleY =
+        _y * 20; // Y axis is inverted on screen relative to sensor usually
 
     // Clamp for UI
     bubbleX = bubbleX.clamp(-100.0, 100.0);
@@ -97,15 +96,19 @@ class _LevelScreenState extends ConsumerState<LevelScreen> {
               shape: BoxShape.circle,
               color: Colors.grey[900],
               border: Border.all(
-                color: _isBalanced ? Colors.greenAccent : Colors.cyanAccent.withOpacity(0.5),
+                color: _isBalanced
+                    ? Colors.greenAccent
+                    : Colors.cyanAccent.withOpacity(0.5),
                 width: 4,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _isBalanced ? Colors.greenAccent.withOpacity(0.3) : Colors.cyanAccent.withOpacity(0.1),
+                  color: _isBalanced
+                      ? Colors.greenAccent.withOpacity(0.3)
+                      : Colors.cyanAccent.withOpacity(0.1),
                   blurRadius: 20,
                   spreadRadius: 5,
-                )
+                ),
               ],
             ),
             child: Stack(
@@ -114,10 +117,10 @@ class _LevelScreenState extends ConsumerState<LevelScreen> {
                 // Crosshair
                 Container(width: 280, height: 1, color: Colors.white12),
                 Container(width: 1, height: 280, color: Colors.white12),
-                
+
                 // Center target
                 Container(
-                  width: 40, 
+                  width: 40,
                   height: 40,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
@@ -133,13 +136,17 @@ class _LevelScreenState extends ConsumerState<LevelScreen> {
                     height: 50,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _isBalanced ? Colors.greenAccent : Colors.cyanAccent,
+                      color: _isBalanced
+                          ? Colors.greenAccent
+                          : Colors.cyanAccent,
                       boxShadow: [
-                         BoxShadow(
-                          color: _isBalanced ? Colors.greenAccent : Colors.cyanAccent,
+                        BoxShadow(
+                          color: _isBalanced
+                              ? Colors.greenAccent
+                              : Colors.cyanAccent,
                           blurRadius: 10,
                           spreadRadius: 1,
-                        )
+                        ),
                       ],
                     ),
                   ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:torch_light/torch_light.dart';
 import 'package:screen_brightness/screen_brightness.dart';
-import 'package:vibration/vibration.dart';
+import 'package:flutter/services.dart';
 
 // --- Torch Provider ---
 // --- Torch Provider ---
@@ -21,9 +21,7 @@ class TorchNotifier extends AutoDisposeNotifier<bool> {
 
   Future<void> toggle() async {
     try {
-      if (await Vibration.hasVibrator() ?? false) {
-        Vibration.vibrate(duration: 50);
-      }
+      await HapticFeedback.mediumImpact();
 
       if (state) {
         await TorchLight.disableTorch();
@@ -42,14 +40,16 @@ class TorchNotifier extends AutoDisposeNotifier<bool> {
       try {
         await TorchLight.disableTorch();
       } catch (e) {
-         // Ignore torch errors on simulator
+        // Ignore torch errors on simulator
       }
       state = false;
     }
   }
 }
 
-final torchProvider = AutoDisposeNotifierProvider<TorchNotifier, bool>(TorchNotifier.new);
+final torchProvider = AutoDisposeNotifierProvider<TorchNotifier, bool>(
+  TorchNotifier.new,
+);
 
 // --- Screen Settings Provider ---
 class ScreenSettingsState {
@@ -101,4 +101,5 @@ class ScreenSettingsNotifier extends Notifier<ScreenSettingsState> {
 
 final screenSettingsProvider =
     NotifierProvider<ScreenSettingsNotifier, ScreenSettingsState>(
-        ScreenSettingsNotifier.new);
+      ScreenSettingsNotifier.new,
+    );

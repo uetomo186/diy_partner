@@ -20,9 +20,18 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE diaries ADD COLUMN color INTEGER NOT NULL DEFAULT 4294967295',
+      ); // 0xFFFFFFFF
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -34,7 +43,8 @@ CREATE TABLE diaries (
   id $idType, 
   title $textType,
   content $textType,
-  createdAt $textType
+  createdAt $textType,
+  color INTEGER NOT NULL
   )
 ''');
   }
@@ -47,6 +57,7 @@ CREATE TABLE diaries (
       title: diary.title,
       content: diary.content,
       createdAt: diary.createdAt,
+      color: diary.color,
     );
   }
 
@@ -54,7 +65,7 @@ CREATE TABLE diaries (
     final db = await instance.database;
     final maps = await db.query(
       'diaries',
-      columns: ['id', 'title', 'content', 'createdAt'],
+      columns: ['id', 'title', 'content', 'createdAt', 'color'],
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -88,11 +99,7 @@ CREATE TABLE diaries (
   Future<int> delete(int id) async {
     final db = await instance.database;
 
-    return await db.delete(
-      'diaries',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('diaries', where: 'id = ?', whereArgs: [id]);
   }
 
   Future close() async {
