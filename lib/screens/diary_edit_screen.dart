@@ -283,6 +283,51 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
                             maxLength: 10000, // Max 10000 chars as requested
                             validator: (v) => v!.isEmpty ? '内容を入力してください' : null,
                           ),
+                          const SizedBox(height: 24),
+                          // AI Comment Section
+                          if (widget.diary?.aiComment != null)
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.blue.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.auto_awesome,
+                                        color: Colors.blue[700],
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'AIからのコメント',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue[800],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    widget.diary!.aiComment!,
+                                    style: TextStyle(
+                                      color: Colors.blue[900],
+                                      height: 1.5,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           const SizedBox(height: 50),
                         ],
                       ),

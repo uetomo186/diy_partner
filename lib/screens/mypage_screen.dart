@@ -50,7 +50,10 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                         return GestureDetector(
                           onTap: () {
                             if (user.profileImagePath != null) {
-                              context.push('/mypage/preview', extra: user.profileImagePath);
+                              context.push(
+                                '/mypage/preview',
+                                extra: user.profileImagePath,
+                              );
                             }
                           },
                           child: Hero(
@@ -62,7 +65,11 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                                   ? FileImage(File(user.profileImagePath!))
                                   : null,
                               child: user.profileImagePath == null
-                                  ? const Icon(Icons.person, size: 50, color: Colors.white)
+                                  ? const Icon(
+                                      Icons.person,
+                                      size: 50,
+                                      color: Colors.white,
+                                    )
                                   : null,
                             ),
                           ),
@@ -93,9 +100,62 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 ),
                 const SizedBox(height: 10),
                 userStateAsync.when(
-                  data: (user) => Text(
-                    user.userName,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  data: (user) => Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        user.userName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.edit,
+                          size: 20,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              final textController = TextEditingController(
+                                text: user.userName,
+                              );
+                              return AlertDialog(
+                                title: const Text('ユーザー名の変更'),
+                                content: TextField(
+                                  controller: textController,
+                                  decoration: const InputDecoration(
+                                    hintText: '新しいユーザー名を入力',
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('キャンセル'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      if (textController.text.isNotEmpty) {
+                                        ref
+                                            .read(userProvider.notifier)
+                                            .updateUserName(
+                                              textController.text,
+                                            );
+                                      }
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('保存'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   loading: () => const Text('Loading...'),
                   error: (_, __) => const Text('Error'),
@@ -104,24 +164,24 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             ),
           ),
           const SizedBox(height: 30),
-          
+
           const Divider(),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text('設定', style: TextStyle(color: Colors.grey)),
           ),
-          
+
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('バージョン情報'),
             trailing: Text(_version.isEmpty ? 'Loading...' : _version),
           ),
-          
+
           ListTile(
             leading: const Icon(Icons.delete_forever, color: Colors.red),
             title: const Text('日記データの全削除', style: TextStyle(color: Colors.red)),
             onTap: () async {
-               final confirm = await showDialog<bool>(
+              final confirm = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('全データ削除'),
@@ -133,7 +193,10 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('削除', style: TextStyle(color: Colors.red)),
+                      child: const Text(
+                        '削除',
+                        style: TextStyle(color: Colors.red),
+                      ),
                     ),
                   ],
                 ),
@@ -142,9 +205,9 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               if (confirm == true) {
                 await ref.read(diaryListProvider.notifier).deleteAll();
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('全ての日記を削除しました')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('全ての日記を削除しました')));
                 }
               }
             },
