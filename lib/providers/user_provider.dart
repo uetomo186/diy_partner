@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import '../repositories/user_repository.dart';
 
 class UserState {
   final String? profileImagePath;
@@ -22,16 +22,19 @@ class UserState {
 }
 
 class UserNotifier extends AsyncNotifier<UserState> {
+  final _repository = UserRepository();
+
   @override
   Future<UserState> build() async {
-    return _loadUser();
+    return _repository.loadUser();
   }
 
-  Future<UserState> _loadUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final path = prefs.getString('profile_image_path');
-    final name = prefs.getString('user_name') ?? 'User Name';
-    return UserState(profileImagePath: path, userName: name);
+  Future<void> updateUserName(String newName) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await _repository.saveUserName(newName);
+      return state.value!.copyWith(userName: newName);
+    });
   }
 
   Future<void> pickImage() async {
@@ -44,12 +47,15 @@ class UserNotifier extends AsyncNotifier<UserState> {
         // Persist image
         final directory = await getApplicationDocumentsDirectory();
         final fileName = p.basename(croppedFile.path);
-        final savedImage = await File(croppedFile.path).copy('${directory.path}/$fileName');
-        
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('profile_image_path', savedImage.path);
+        final savedImage = await File(
+          croppedFile.path,
+        ).copy('${directory.path}/$fileName');
 
-        state = AsyncData(state.value!.copyWith(profileImagePath: savedImage.path));
+        await _repository.saveProfileImage(savedImage.path);
+
+        state = AsyncData(
+          state.value!.copyWith(profileImagePath: savedImage.path),
+        );
       }
     }
   }
@@ -59,17 +65,18 @@ class UserNotifier extends AsyncNotifier<UserState> {
       sourcePath: pickedFile.path,
       uiSettings: [
         AndroidUiSettings(
-            toolbarTitle: 'Cropper',
-            toolbarColor: Colors.deepOrange,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: false),
-        IOSUiSettings(
-          title: 'Cropper',
+          toolbarTitle: 'Cropper',
+          toolbarColor: Colors.deepOrange,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false,
         ),
+        IOSUiSettings(title: 'Cropper'),
       ],
     );
   }
 }
 
-final userProvider = AsyncNotifierProvider<UserNotifier, UserState>(UserNotifier.new);
+final userProvider = AsyncNotifierProvider<UserNotifier, UserState>(
+  UserNotifier.new,
+);
