@@ -1,7 +1,8 @@
+import 'dart:ui'; // Required for ImageFilter
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'package:flutter/services.dart';
 import '../providers/level_providers.dart';
 
 class LevelScreen extends ConsumerStatefulWidget {
@@ -12,6 +13,7 @@ class LevelScreen extends ConsumerStatefulWidget {
 }
 
 class _LevelScreenState extends ConsumerState<LevelScreen> {
+  // Low-pass filter factors to reduce jitter
   double _x = 0;
   double _y = 0;
   bool _isBalanced = false;
@@ -19,173 +21,244 @@ class _LevelScreenState extends ConsumerState<LevelScreen> {
   @override
   void initState() {
     super.initState();
-    // We listen to the stream in build via ref.watch
   }
 
   void _updateLevel(AccelerometerEvent event) {
-    // Basic low-pass filter
+    // Smoother interpolation factor
+    const double alpha = 0.1;
+
     setState(() {
-      _x = _x * 0.9 + event.x * 0.1;
-      _y = _y * 0.9 + event.y * 0.1;
+      _x = _x * (1 - alpha) + event.x * alpha;
+      _y = _y * (1 - alpha) + event.y * alpha;
     });
+
     _checkLevel();
   }
 
-  void _checkLevel() async {
-    // Threshold for "level"
-    // Accelerometer returns ~0 for x/y when flat on table
+  void _checkLevel() {
+    // Threshold for perfect level (allow slight error)
     bool isLevel = (_x.abs() < 0.2 && _y.abs() < 0.2);
 
     if (isLevel && !_isBalanced) {
-      HapticFeedback.mediumImpact();
+      HapticFeedback.heavyImpact(); // Stronger feedback for success
     }
     if (mounted) {
-      setState(() {
-        _isBalanced = isLevel;
-      });
+      if (_isBalanced != isLevel) {
+        setState(() {
+          _isBalanced = isLevel;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final accelerometerAsync = ref.watch(levelSensorProvider);
-
-    // React to stream changes
-    accelerometerAsync.whenData((event) {
-      // We need to update state based on event, but doing setState during build is bad.
-      // However, for high-frequency sensor data, using a StreamBuilder or ref.watch directly in build
-      // and calculating position there is better than setting state.
-      // Let's adjust logic: calculate values directly from the latest async value
-      // But we applied a low-pass filter before.
-      // For simplicity in this refactor, we can just use the raw event or specific filtered provider.
-      // To keep the filter logic simple without complex providers, we'll keep the side-effect based approach
-      // but strictly speaking, we should use a StreamProvider.family or similar.
-      // A better way for Riverpod is to have a provider yielding the filtered value.
-      // For now, let's use a workaround:
-      // We will perform the logic in the listener below.
-    });
-
-    // Better approach: use ref.listen to update manual state with filter
+    // Listen to sensor updates
     ref.listen(levelSensorProvider, (previous, next) {
       next.whenData((event) => _updateLevel(event));
     });
 
-    // Calculate display values
-    // Angle calculation (approximate for display)
-    // x/y are acceleration in m/s^2. max is ~9.8
-    double xAngle = (_x / 9.8) * 90;
-    double yAngle = (_y / 9.8) * 90;
+    // Calculate angles
+    // x/y are roughly m/s^2 (max ~9.8)
+    // Map to degrees locally for display
+    double xDegree = (_x / 9.8) * 90;
+    double yDegree = (_y / 9.8) * 90;
 
-    // Visual constraints
-    double bubbleX = -_x * 20; // Scale factor
-    double bubbleY =
-        _y * 20; // Y axis is inverted on screen relative to sensor usually
+    // Constrain for bubble movement (-1 to 1 range for alignment)
+    // Invert X because tilting left (positive X accel) should move bubble right
+    // Invert Y because tilting down (positive Y accel) should move bubble up
+    double alignX = (-_x / 5).clamp(-1.0, 1.0);
+    double alignY = (_y / 5).clamp(-1.0, 1.0);
 
-    // Clamp for UI
-    bubbleX = bubbleX.clamp(-100.0, 100.0);
-    bubbleY = bubbleY.clamp(-100.0, 100.0);
+    final bgColor = const Color(0xFF121212);
+    final accentColor = _isBalanced
+        ? const Color(0xFF00FF88)
+        : Colors.cyanAccent;
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey[900],
-              border: Border.all(
-                color: _isBalanced
-                    ? Colors.greenAccent
-                    : Colors.cyanAccent.withOpacity(0.5),
-                width: 4,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _isBalanced
-                      ? Colors.greenAccent.withOpacity(0.3)
-                      : Colors.cyanAccent.withOpacity(0.1),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Crosshair
-                Container(width: 280, height: 1, color: Colors.white12),
-                Container(width: 1, height: 280, color: Colors.white12),
-
-                // Center target
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white24, width: 1),
+    return Scaffold(
+      backgroundColor: bgColor,
+      appBar: AppBar(
+        title: const Text('LEVEL', style: TextStyle(letterSpacing: 2)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white.withOpacity(0.8),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Outer Neumorphic Container
+            Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: bgColor,
+                boxShadow: [
+                  // Light source (Top Left)
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.1),
+                    offset: const Offset(-10, -10),
+                    blurRadius: 20,
                   ),
-                ),
-
-                // The Bubble
-                Transform.translate(
-                  offset: Offset(bubbleX, bubbleY),
-                  child: Container(
-                    width: 50,
-                    height: 50,
+                  // Shadow (Bottom Right)
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.8),
+                    offset: const Offset(10, 10),
+                    blurRadius: 20,
+                  ),
+                  // Inner Glow for depth if balanced
+                  if (_isBalanced)
+                    BoxShadow(
+                      color: accentColor.withOpacity(0.2),
+                      blurRadius: 50,
+                      spreadRadius: 10,
+                    ),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Inner Concave Surface
+                  Container(
+                    width: 280,
+                    height: 280,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _isBalanced
-                          ? Colors.greenAccent
-                          : Colors.cyanAccent,
-                      boxShadow: [
-                        BoxShadow(
-                          color: _isBalanced
-                              ? Colors.greenAccent
-                              : Colors.cyanAccent,
-                          blurRadius: 10,
-                          spreadRadius: 1,
-                        ),
-                      ],
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.black.withOpacity(0.9), // Darker inner shadow
+                          bgColor,
+                        ],
+                      ),
                     ),
                   ),
-                ),
+
+                  // Target Ring (Center)
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                        width: 2,
+                      ),
+                      boxShadow: _isBalanced
+                          ? [
+                              BoxShadow(
+                                color: accentColor.withOpacity(0.5),
+                                blurRadius: 15,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : [],
+                    ),
+                  ),
+
+                  // Crosshair lines
+                  Container(width: 200, height: 1, color: Colors.white10),
+                  Container(width: 1, height: 200, color: Colors.white10),
+
+                  // The "Liquid" Bubble
+                  AnimatedAlign(
+                    alignment: Alignment(alignX, alignY),
+                    duration: const Duration(
+                      milliseconds: 100,
+                    ), // Smooth intertia
+                    curve: Curves.easeOutCubic,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: accentColor.withOpacity(0.8),
+                        boxShadow: [
+                          // Glow
+                          BoxShadow(
+                            color: accentColor,
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          ),
+                          // Highlight (Glossy effect)
+                          const BoxShadow(
+                            color: Colors.white54,
+                            offset: Offset(-8, -8),
+                            blurRadius: 15,
+                            spreadRadius: -5,
+                          ),
+                        ],
+                      ),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.9),
+                                accentColor.withOpacity(0.0),
+                              ],
+                              center: const Alignment(-0.3, -0.3),
+                              radius: 0.8,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 60),
+
+            // Digital Display
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildDigitalDisplay('ROLL (X)', xDegree),
+                Container(width: 1, height: 40, color: Colors.white12),
+                _buildDigitalDisplay('PITCH (Y)', yDegree),
               ],
             ),
-          ),
-          const SizedBox(height: 50),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildValueDisplay("左右", xAngle),
-              _buildValueDisplay("前後", yAngle),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildValueDisplay(String label, double value) {
+  Widget _buildDigitalDisplay(String label, double value) {
     return Column(
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 1.2,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Text(
           "${value.toStringAsFixed(1)}°",
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.w300,
-            fontFamily: "Courier", // Monospace for stability
+            fontSize: 32,
+            fontWeight: FontWeight.w200,
+            fontFamily: "Courier",
+            shadows: [
+              BoxShadow(
+                color: Colors.black,
+                offset: Offset(2, 2),
+                blurRadius: 4,
+              ),
+            ],
           ),
         ),
       ],
