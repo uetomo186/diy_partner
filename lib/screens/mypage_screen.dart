@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:go_router/go_router.dart';
+import '../models/diy_rank.dart';
 import '../providers/diary_providers.dart';
 import '../providers/user_provider.dart';
 
@@ -32,6 +33,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   @override
   Widget build(BuildContext context) {
     final userStateAsync = ref.watch(userProvider);
+    final diaryListAsync = ref.watch(diaryListProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('マイページ')),
@@ -163,6 +165,105 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 20),
+
+          // DIY Rank Card
+          if (diaryListAsync.hasValue)
+            Builder(
+              builder: (context) {
+                final diaries = diaryListAsync.value!;
+                final postCount = diaries.length;
+                final currentRank = DiyRank.getRank(postCount);
+                final nextRank = DiyRank.getNextRank(postCount);
+
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        currentRank.color.withOpacity(0.8),
+                        currentRank.color,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: currentRank.color.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        '現在のDIYランク',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Lv.${currentRank.level} ${currentRank.name}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        currentRank.description,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      if (nextRank != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black26,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '次のランクまであと ${nextRank.minCount - postCount} 投稿',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white24,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            '最高ランク到達！',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
           const SizedBox(height: 30),
 
           const Divider(),
