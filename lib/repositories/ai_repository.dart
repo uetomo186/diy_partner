@@ -1,8 +1,8 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class AiRepository {
-  // TODO: Replace with valid API Key
-  static const String _apiKey = 'YOUR_API_KEY';
+  static final String _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
   late final GenerativeModel _model;
 
   AiRepository() {
