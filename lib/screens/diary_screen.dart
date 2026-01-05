@@ -131,26 +131,6 @@ class DiaryScreen extends ConsumerWidget {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            if (diary.aiComment != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.auto_awesome,
-                    size: 14,
-                    color: isDark ? Colors.white70 : Colors.blueGrey,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'AIコメントあり',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: isDark ? Colors.white70 : Colors.blueGrey,
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
       ),
