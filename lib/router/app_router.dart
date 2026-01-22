@@ -8,6 +8,8 @@ import '../widgets/scaffold_with_nav_bar.dart';
 import '../models/diary.dart';
 import '../screens/diary_edit_screen.dart';
 import '../screens/profile_image_preview_screen.dart';
+import '../screens/login_screen.dart';
+import '../screens/signup_screen.dart';
 
 // Private navigators
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -25,6 +27,16 @@ final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/diary',
   routes: <RouteBase>[
+    GoRoute(
+      path: '/login',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/signup',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const SignupScreen(),
+    ),
     GoRoute(
       path: '/diary/edit',
       parentNavigatorKey: _rootNavigatorKey,
