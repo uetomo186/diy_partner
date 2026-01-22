@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../providers/light_providers.dart';
 
 class LightScreen extends ConsumerStatefulWidget {
@@ -22,9 +23,16 @@ class _LightScreenState extends ConsumerState<LightScreen> {
   }
 
   void _loadAd() {
-    final adUnitId = Platform.isAndroid
-        ? 'ca-app-pub-3940256099942544/6300978111'
-        : 'ca-app-pub-3940256099942544/2934735716';
+    // Use environment variables for AdMob Unit IDs
+    // Fallback to Test IDs if not set in .env
+    final androidUnitId =
+        dotenv.env['ADMOB_UNIT_ID_ANDROID'] ??
+        'ca-app-pub-3940256099942544/6300978111';
+    final iosUnitId =
+        dotenv.env['ADMOB_UNIT_ID_IOS'] ??
+        'ca-app-pub-3940256099942544/2934735716';
+
+    final adUnitId = Platform.isAndroid ? androidUnitId : iosUnitId;
 
     _bannerAd = BannerAd(
       adUnitId: adUnitId,
