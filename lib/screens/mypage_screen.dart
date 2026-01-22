@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/diy_rank.dart';
 import '../providers/diary_providers.dart';
 import '../providers/user_provider.dart';
+import '../providers/auth_providers.dart'; // Added
 
 class MyPageScreen extends ConsumerStatefulWidget {
   const MyPageScreen({super.key});
@@ -34,11 +36,54 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   Widget build(BuildContext context) {
     final userStateAsync = ref.watch(userProvider);
     final diaryListAsync = ref.watch(diaryListProvider);
+    final authUserAsync = ref.watch(authStateProvider); // Added
 
     return Scaffold(
       appBar: AppBar(title: const Text('マイページ')),
       body: ListView(
         children: [
+          // Auth Status Section
+          authUserAsync.when(
+            data: (user) {
+              if (user == null) {
+                return Card(
+                  margin: const EdgeInsets.all(16),
+                  color: Colors.blue[50],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'ログインしていません',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () => context.push('/login'),
+                          child: const Text('ログイン / 新規登録'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              } else {
+                return ListTile(
+                  leading: const Icon(Icons.cloud_done, color: Colors.green),
+                  title: Text('ログイン中: ${user.email ?? "User"}'),
+                  subtitle: const Text('データはクラウドに同期される可能性があります（未実装）'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.logout),
+                    onPressed: () async {
+                      await ref.read(authRepositoryProvider).signOut();
+                    },
+                  ),
+                );
+              }
+            },
+            loading: () => const LinearProgressIndicator(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+
           const SizedBox(height: 20),
           // User Profile Placeholder
           Center(

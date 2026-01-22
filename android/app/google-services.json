@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "791236107654",
+    "project_id": "diy-partner",
+    "storage_bucket": "diy-partner.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:791236107654:android:a0b567901e4afae3ad2007",
+        "android_client_info": {
+          "package_name": "com.example.diy_partner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBd_eZFtUdI4pEVQK8Ps-47ndn2MQhgUW8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
