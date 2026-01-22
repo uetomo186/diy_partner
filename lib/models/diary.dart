@@ -5,6 +5,7 @@ class Diary {
   final DateTime createdAt;
   final int color;
   final String? aiComment;
+  final String? imagePath;
 
   Diary({
     this.id,
@@ -13,6 +14,7 @@ class Diary {
     required this.createdAt,
     this.color = 0xFFFFFFFF,
     this.aiComment,
+    this.imagePath,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class Diary {
       'createdAt': createdAt.toIso8601String(),
       'color': color,
       'aiComment': aiComment,
+      'imagePath': imagePath,
     };
   }
 
@@ -34,6 +37,7 @@ class Diary {
       createdAt: DateTime.parse(map['createdAt']),
       color: map['color'] ?? 0xFFFFFFFF,
       aiComment: map['aiComment'],
+      imagePath: map['imagePath'],
     );
   }
 
@@ -44,6 +48,7 @@ class Diary {
     DateTime? createdAt,
     int? color,
     String? aiComment,
+    String? imagePath,
   }) {
     return Diary(
       id: id ?? this.id,
@@ -52,6 +57,7 @@ class Diary {
       createdAt: createdAt ?? this.createdAt,
       color: color ?? this.color,
       aiComment: aiComment ?? this.aiComment,
+      imagePath: imagePath ?? this.imagePath,
     );
   }
 }

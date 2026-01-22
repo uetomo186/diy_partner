@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/diary_screen.dart';
 import '../screens/light_screen.dart';
-import '../screens/level_screen.dart';
 import '../screens/mypage_screen.dart';
 import '../widgets/scaffold_with_nav_bar.dart';
 
@@ -12,10 +11,15 @@ import '../screens/profile_image_preview_screen.dart';
 
 // Private navigators
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
-final _sectionANavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'sectionANav');
-final _sectionBNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'sectionBNav');
-final _sectionCNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'sectionCNav');
-final _sectionDNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'sectionDNav');
+final _sectionANavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'sectionANav',
+);
+final _sectionBNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'sectionBNav',
+);
+final _sectionDNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'sectionDNav',
+);
 
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -65,18 +69,7 @@ final appRouter = GoRouter(
             ),
           ],
         ),
-        // The route branch for the 3rd Tab (Level)
-        StatefulShellBranch(
-          navigatorKey: _sectionCNavigatorKey,
-          routes: <RouteBase>[
-            GoRoute(
-              path: '/level',
-              builder: (BuildContext context, GoRouterState state) =>
-                  const LevelScreen(),
-            ),
-          ],
-        ),
-        // The route branch for the 4th Tab (MyPage)
+        // The route branch for the 3rd Tab (MyPage)
         StatefulShellBranch(
           navigatorKey: _sectionDNavigatorKey,
           routes: <RouteBase>[

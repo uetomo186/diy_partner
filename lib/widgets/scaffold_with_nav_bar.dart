@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class ScaffoldWithNavBar extends StatelessWidget {
-  const ScaffoldWithNavBar({
-    required this.navigationShell,
-    super.key,
-  });
+  const ScaffoldWithNavBar({required this.navigationShell, super.key});
 
   /// The navigation shell and container for the branch Navigators.
   final StatefulNavigationShell navigationShell;
@@ -17,24 +14,15 @@ class ScaffoldWithNavBar extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (int index) => _onTap(context, index),
-        type: BottomNavigationBarType.fixed, // Use fixed for 4 items to show labels
+        type: BottomNavigationBarType
+            .fixed, // Use fixed for 4 items to show labels
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: '日記',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.book), label: '日記'),
           BottomNavigationBarItem(
             icon: Icon(Icons.lightbulb_outline),
             label: 'ライト',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: '水平器',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'マイページ',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'マイページ'),
         ],
       ),
     );
