@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'dart:io';
 import '../models/diary.dart';
 import '../providers/diary_providers.dart';
 
@@ -102,33 +103,55 @@ class DiaryScreen extends ConsumerWidget {
             ),
           ],
         ),
-        padding: const EdgeInsets.all(16),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              diary.title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: textColor,
-                height: 1.2,
+            if (diary.imagePath != null)
+              Image.file(
+                File(diary.imagePath!),
+                width: double.infinity,
+                height: 120,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const SizedBox.shrink(); // Hide if error (deleted file etc)
+                },
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              diary.content,
-              style: TextStyle(fontSize: 13, color: contentColor, height: 1.4),
-              maxLines: 6, // Show more content in masonry
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              DateFormat('MM/dd').format(diary.createdAt),
-              style: TextStyle(
-                fontSize: 11,
-                color: contentColor,
-                fontWeight: FontWeight.w500,
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    diary.title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    diary.content,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: contentColor,
+                      height: 1.4,
+                    ),
+                    maxLines: 6, // Show more content in masonry
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    DateFormat('MM/dd').format(diary.createdAt),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: contentColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

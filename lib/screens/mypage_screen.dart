@@ -278,6 +278,34 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             trailing: Text(_version.isEmpty ? 'Loading...' : _version),
           ),
 
+          diaryListAsync.when(
+            data: (diaries) {
+              DateTime? startDate;
+              if (diaries.isNotEmpty) {
+                // diaries are sorted by createdAt DESC, so the last one is the oldest
+                startDate = diaries.last.createdAt;
+              }
+
+              return ListTile(
+                leading: const Icon(
+                  Icons.calendar_today_outlined,
+                  color: Colors.orange,
+                ),
+                title: const Text('DIY日記開始日'),
+                trailing: Text(
+                  startDate != null
+                      ? '${startDate.year}年${startDate.month}月${startDate.day}日'
+                      : '未開始',
+                  style: TextStyle(
+                    color: startDate != null ? Colors.black87 : Colors.grey,
+                  ),
+                ),
+              );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+
           ListTile(
             leading: const Icon(Icons.delete_forever, color: Colors.red),
             title: const Text('日記データの全削除', style: TextStyle(color: Colors.red)),

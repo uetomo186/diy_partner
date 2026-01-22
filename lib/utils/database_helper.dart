@@ -20,7 +20,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -35,6 +35,9 @@ class DatabaseHelper {
     if (oldVersion < 3) {
       await db.execute('ALTER TABLE diaries ADD COLUMN aiComment TEXT');
     }
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE diaries ADD COLUMN imagePath TEXT');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -48,7 +51,8 @@ CREATE TABLE diaries (
   content $textType,
   createdAt $textType,
   color INTEGER NOT NULL,
-  aiComment TEXT
+  aiComment TEXT,
+  imagePath TEXT
   )
 ''');
   }
@@ -62,6 +66,8 @@ CREATE TABLE diaries (
       content: diary.content,
       createdAt: diary.createdAt,
       color: diary.color,
+      imagePath: diary.imagePath,
+      aiComment: diary.aiComment,
     );
   }
 
@@ -69,7 +75,15 @@ CREATE TABLE diaries (
     final db = await instance.database;
     final maps = await db.query(
       'diaries',
-      columns: ['id', 'title', 'content', 'createdAt', 'color', 'aiComment'],
+      columns: [
+        'id',
+        'title',
+        'content',
+        'createdAt',
+        'color',
+        'aiComment',
+        'imagePath',
+      ],
       where: 'id = ?',
       whereArgs: [id],
     );

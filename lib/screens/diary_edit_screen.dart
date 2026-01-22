@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import '../models/diary.dart';
 import '../providers/diary_providers.dart';
 
@@ -18,6 +22,7 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
   late TextEditingController _titleController;
   late TextEditingController _contentController;
   late int _selectedColor;
+  String? _imagePath;
 
   final List<int> _colors = [
     0xFFFFFFFF, // White
@@ -35,6 +40,7 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
       text: widget.diary?.content ?? '',
     );
     _selectedColor = widget.diary?.color ?? 0xFFFFFFFF;
+    _imagePath = widget.diary?.imagePath;
   }
 
   @override
@@ -42,6 +48,24 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${p.basename(pickedFile.path)}';
+      final savedImage = await File(
+        pickedFile.path,
+      ).copy('${directory.path}/$fileName');
+
+      setState(() {
+        _imagePath = savedImage.path;
+      });
+    }
   }
 
   Future<void> _saveDiary() async {
@@ -61,6 +85,7 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
           content: content,
           createdAt: DateTime.now(),
           color: _selectedColor,
+          imagePath: _imagePath,
         );
         await notifier.addDiary(newDiary);
       } else {
@@ -68,6 +93,7 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
           title: title,
           content: content,
           color: _selectedColor,
+          imagePath: _imagePath,
         );
         await notifier.updateDiary(updatedDiary);
       }
@@ -85,33 +111,12 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Current date for display
     final dateStr = DateFormat(
       'yyyy年MM月dd日 (E)',
       'ja',
     ).format(widget.diary?.createdAt ?? DateTime.now());
 
-    // Determine if page should be dark or light based on BG color (optional, but keeping page white/card-like is safer for "modern" contrast)
-    // Actually, making the "Page" slightly lighter/white than the background which is colored creates the "Note" effect.
-    // If selected color is White, we might need a grey background scaffold.
-    // Strategy: Scaffold BG is slightly darkened based on selected color, Card is selected color.
-    // OR: Scaffold is selected color, Card is White (standard "Note on desk").
-    // Let's go with: Scaffold is selected Color, Card is White (or slightly tinted white).
-
-    // Actually, usually "Color" implies the note color.
-    // So Scaffold should be a neutral grey/dark, and the "Page" is the colored part.
-    // BUT the previous user request implied "UI customized to diary color".
-    // Let's stick to: Scaffold = Selected Color (Light), Card = White (with high opacity) or just Paper.
-
-    // User Update: "Range of text field". implies a visual container.
-    // Let's try: Scaffold Background = Neutral Grey/Dark (modern vibe), Page = Selected Color.
-    // This makes the "Paper" pop.
-
     final bgColor = Color(_selectedColor);
-    final isWhite = _selectedColor == 0xFFFFFFFF;
-
-    // Actually simpler: Scaffold is the selected color, but the 'Input Area' is a White Card.
-    // This looks cleaner.
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -216,14 +221,9 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
               child: Container(
                 margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(
-                    0.9,
-                  ), // Slightly translucent white paper
+                  color: Colors.white.withOpacity(0.9),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.black12,
-                    width: 1,
-                  ), // Added border
+                  border: Border.all(color: Colors.black12, width: 1),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -248,6 +248,67 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
                               fontSize: 14,
                             ),
                           ),
+                          const SizedBox(height: 16),
+
+                          // Image Attachment Area
+                          if (_imagePath != null)
+                            Stack(
+                              alignment: Alignment.topRight,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    File(_imagePath!),
+                                    width: double.infinity,
+                                    height: 200,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                  ),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.black54,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _imagePath = null;
+                                    });
+                                  },
+                                ),
+                              ],
+                            )
+                          else
+                            GestureDetector(
+                              onTap: _pickImage,
+                              child: Container(
+                                width: double.infinity,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.add_a_photo,
+                                      color: Colors.grey,
+                                      size: 32,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '画像を追加',
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _titleController,
@@ -280,13 +341,13 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
                               contentPadding: EdgeInsets.zero,
                             ),
                             maxLines: null,
-                            maxLength: 10000, // Max 10000 chars as requested
+                            maxLength: 10000,
                             validator: (v) => v!.isEmpty ? '内容を入力してください' : null,
                           ),
-                          const SizedBox(height: 24),
+                          // const SizedBox(height: 24),
 
                           // AI Comment Section
-                          const SizedBox(height: 50),
+                          // const SizedBox(height: 50),
                         ],
                       ),
                     ),
